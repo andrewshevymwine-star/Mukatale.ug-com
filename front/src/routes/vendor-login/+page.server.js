@@ -8,8 +8,9 @@ export const actions = {
       const identifier = formData.get('identifier');
       const password = formData.get('password');
       
-      console.log('SSR Login attempt for:', identifier);
+      console.log('🔐 Login attempt for:', identifier);
       
+      // Validation
       if (!identifier || !password) {
         return {
           success: false,
@@ -29,6 +30,7 @@ export const actions = {
       
       if (!strapiResponse.ok) {
         const errorData = await strapiResponse.json().catch(() => ({}));
+        console.log('❌ Strapi login failed:', errorData.error?.message);
         return {
           success: false,
           error: errorData.error?.message || 'Invalid email or password'
@@ -46,9 +48,9 @@ export const actions = {
         };
       }
       
-      console.log('SSR Login successful for user:', user.email);
+      console.log('✅ User authenticated:', user.email, 'ID:', user.id);
       
-      // Set JWT cookie (httpOnly for security)
+      // Set auth cookies
       cookies.set('jwt', jwt, {
         path: '/',
         httpOnly: true,
@@ -57,7 +59,6 @@ export const actions = {
         maxAge: 60 * 60 * 24 * 7 // 7 days
       });
       
-      // Set user cookie (non-httpOnly for client-side access)
       cookies.set('user', JSON.stringify(user), {
         path: '/',
         sameSite: 'lax',
@@ -65,58 +66,65 @@ export const actions = {
         maxAge: 60 * 60 * 24 * 7
       });
       
-      // Check for vendor profile
-      let vendor = null;
-      let vendorId = null;
+      // 🔥 CRITICAL: Check if user has vendor profile
+      console.log('🔍 Checking vendor profile for user ID:', user.id);
       
-      try {
-        const vendorRes = await fetch(
-          `http://localhost:1337/api/vendors?filters[users_permissions_user][id][$eq]=${user.id}&populate=*`,
-          { headers: { 'Authorization': `Bearer ${jwt}` } }
-        );
-        
-        if (vendorRes.ok) {
-          const vendorData = await vendorRes.json();
-          if (vendorData.data && vendorData.data.length > 0) {
-            vendor = vendorData.data[0];
-            vendorId = vendor.id;
-            
-            cookies.set('vendor', JSON.stringify(vendor), {
-              path: '/',
-              sameSite: 'lax',
-              secure: process.env.NODE_ENV === 'production',
-              maxAge: 60 * 60 * 24 * 7
-            });
-            
-            cookies.set('vendorId', vendorId.toString(), {
-              path: '/',
-              sameSite: 'lax',
-              secure: process.env.NODE_ENV === 'production',
-              maxAge: 60 * 60 * 24 * 7
-            });
-            
-            return {
-              success: true,
-              redirectTo: '/vendor-dashboard',
-              user,
-              vendor,
-              vendorId
-            };
-          }
+      // CORRECT QUERY: Use users_permissions_user (not user)
+      const vendorRes = await fetch(
+        `http://localhost:1337/api/vendors?filters[users_permissions_user][id][$eq]=${user.id}&populate=*`,
+        { 
+          headers: { 
+            'Authorization': `Bearer ${jwt}`,
+            'Content-Type': 'application/json'
+          } 
         }
-      } catch (error) {
-        console.log('Vendor check failed:', error.message);
+      );
+      
+      if (vendorRes.ok) {
+        const vendorData = await vendorRes.json();
+        console.log('📦 Vendor data:', vendorData);
+        
+        if (vendorData.data && vendorData.data.length > 0) {
+          const vendor = vendorData.data[0];
+          const vendorId = vendor.id;
+          
+          console.log('🎯 Vendor found! ID:', vendorId, 'Name:', vendor.name);
+          
+          // Set vendor cookies
+          cookies.set('vendor', JSON.stringify(vendor), {
+            path: '/',
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 60 * 60 * 24 * 7
+          });
+          
+          cookies.set('vendorId', vendorId.toString(), {
+            path: '/',
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 60 * 60 * 24 * 7
+          });
+          
+          // REDIRECT TO DASHBOARD
+          console.log('🚀 Redirecting to VENDOR DASHBOARD');
+          throw redirect(302, '/vendor-dashboard');
+        } else {
+          console.log('📝 No vendor profile found');
+        }
+      } else {
+        console.log('❌ Vendor check failed:', vendorRes.status);
       }
       
-      // No vendor found
-      return {
-        success: true,
-        redirectTo: '/vendor-registration?completeProfile=true',
-        user
-      };
+      // If we get here, NO vendor profile was found
+      console.log('📝 Redirecting to registration');
+      throw redirect(302, '/vendor-registration?completeProfile=true');
       
     } catch (error) {
-      console.error('SSR Login error:', error);
+      // If it's a redirect error, re-throw it
+      if (error?.status === 302) {
+        throw error;
+      }
+      console.error('💥 Login error:', error);
       return {
         success: false,
         error: 'Server error. Please try again.'
@@ -125,51 +133,22 @@ export const actions = {
   }
 };
 
-export const load = async ({ cookies, fetch, url }) => {
+export const load = async ({ cookies, url }) => {
   const jwt = cookies.get('jwt');
   const userCookie = cookies.get('user');
   
+  console.log('📄 Login page load - Cookies:', {
+    hasJWT: !!jwt,
+    hasUser: !!userCookie,
+    pathname: url.pathname
+  });
+  
+  // If already logged in, redirect to dashboard
   if (jwt && userCookie) {
-    try {
-      const user = JSON.parse(userCookie);
-      
-      // Verify token is still valid
-      const userRes = await fetch('http://localhost:1337/api/users/me', {
-        headers: { 'Authorization': `Bearer ${jwt}` }
-      });
-      
-      if (userRes.ok) {
-        // Check for vendor profile
-        const vendorRes = await fetch(
-          `http://localhost:1337/api/vendors?filters[users_permissions_user][id][$eq]=${user.id}&populate=*`,
-          { headers: { 'Authorization': `Bearer ${jwt}` } }
-        );
-        
-        if (vendorRes.ok) {
-          const vendorData = await vendorRes.json();
-          const hasVendorProfile = vendorData.data && vendorData.data.length > 0;
-          
-          if (hasVendorProfile) {
-            // Already logged in with vendor profile - redirect to dashboard
-            throw redirect(302, '/vendor-dashboard');
-          } else if (!url.searchParams.has('completeProfile')) {
-            // Has account but no vendor profile - suggest registration
-            throw redirect(302, '/vendor-registration?completeProfile=true');
-          }
-        }
-      }
-    } catch (error) {
-      if (error?.status === 302) throw error;
-      
-      // Clear invalid cookies
-      cookies.delete('jwt', { path: '/' });
-      cookies.delete('user', { path: '/' });
-      cookies.delete('vendor', { path: '/' });
-      cookies.delete('vendorId', { path: '/' });
-    }
+    console.log('✅ Already logged in, redirecting to dashboard');
+    throw redirect(302, '/vendor-dashboard');
   }
   
-  // Return empty props if not authenticated
   return {
     isAuthenticated: !!jwt,
     user: userCookie ? JSON.parse(userCookie) : null
