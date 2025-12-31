@@ -104,7 +104,7 @@ export const load = async ({ cookies, fetch }) => {
       console.log('📦 Loading products for vendor:', currentVendorId);
       
       const productsRes = await fetch(
-        `http://localhost:1337/api/products?filters[vendor][id][$eq]=${currentVendorId}&populate=*&sort=createdAt:desc`,
+        `http://localhost:1337/api/products?filters[vendor][id][$eq]=${currentVendorId}&populate=*&sort=createdAt:desc`,//this is not fetching products.Debug it to fetch according o strapi5 syntax.
         { 
           headers: { 
             'Authorization': `Bearer ${jwt}`,
