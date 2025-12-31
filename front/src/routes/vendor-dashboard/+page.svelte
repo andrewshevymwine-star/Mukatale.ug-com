@@ -41,55 +41,50 @@
     };
   }
   
-  // Handle logout
+  // Debug: Log the data structure
+  $: if (data) {
+    console.log('📊 Data from server:', {
+      vendor: data.vendor,
+      productsCount: data.products?.length || 0,
+      productsStructure: data.products?.[0] || 'No products',
+      marketsCount: data.markets?.length || 0
+    });
+  }
+  
+  // Handle logout - UPDATED VERSION
   async function handleLogout() {
     logoutLoading = true;
-    logoutError = '';
     
     try {
-      // Call the logout API endpoint
-      const response = await fetch('/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Logout failed');
-      }
-      
-      // Clear all client-side storage
+      // Clear client-side storage first
       if (browser) {
-        // Clear localStorage
         localStorage.removeItem('user');
         localStorage.removeItem('vendor');
         localStorage.removeItem('jwt');
         localStorage.removeItem('vendorData');
-        
-        // Clear sessionStorage
         sessionStorage.clear();
         
         // Clear cookies client-side as fallback
-        document.cookie = 'jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        document.cookie = 'vendorId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        document.cookie = 'vendor=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        const clearCookie = (name) => {
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        };
+        clearCookie('jwt');
+        clearCookie('vendorId');
+        clearCookie('user');
+        clearCookie('vendor');
       }
       
-      // Redirect to home page
-      window.location.href = '/';
+      // Redirect to logout endpoint which will clear server cookies and redirect to home
+      window.location.href = '/auth/logout';
       
     } catch (error) {
       console.error('Logout error:', error);
-      logoutError = 'Logout failed. Please try again.';
+      logoutError = 'Logout failed. Redirecting to home...';
       
-      // Fallback: still try to redirect even if API call failed
+      // Fallback: redirect to home page after delay
       setTimeout(() => {
         window.location.href = '/';
       }, 2000);
-    } finally {
-      logoutLoading = false;
     }
   }
   
@@ -480,7 +475,116 @@
         </div>
       </div>
 
-      <!-- Vendor Profile Section -->
+      <!-- PRODUCTS SECTION -->
+      <div class="mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-gray-900">My Products</h2>
+            <p class="text-gray-600 mt-1">Manage your product listings and inventory</p>
+          </div>
+          <div class="mt-4 sm:mt-0">
+            <button
+              on:click={() => showAddProductModal = true}
+              class="px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center shadow hover:shadow-lg"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add New Product
+            </button>
+          </div>
+        </div>
+
+        <!-- Products Grid -->
+        {#if data.products && data.products.length > 0}
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {#each data.products as product (product.id)}
+              <div class="bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-lg transition-shadow duration-300 group">
+                <!-- Product Image -->
+                <div class="h-48 bg-gray-100 relative overflow-hidden">
+                  {#if product.image}
+                    <img
+                      src={getStrapiImageUrl(product.image)}
+                      alt={product.name}
+                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  {:else}
+                    <div class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                      <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                  {/if}
+                  
+                  <!-- Price Badge -->
+                  <div class="absolute top-3 left-3">
+                    <span class="px-3 py-1 bg-green-600 text-white text-sm font-bold rounded-full shadow">
+                      {formatPrice(product.price)}
+                    </span>
+                  </div>
+                  
+                  <!-- Delete Button -->
+                  <button
+                    on:click={() => deleteProductHandler(product.id)}
+                    class="absolute top-3 right-3 bg-white text-red-600 p-2 rounded-full hover:bg-red-50 shadow opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                    title="Delete product"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <!-- Product Details -->
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-3">
+                    <h3 class="font-bold text-gray-900 text-lg line-clamp-1">{capitalize(product.name)}</h3>
+                  </div>
+                  
+                  {#if product.description}
+                    <p class="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
+                  {:else}
+                    <p class="text-gray-400 text-sm mb-4 italic">No description provided</p>
+                  {/if}
+                  
+                  <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+                    <div class="flex items-center text-sm text-gray-500">
+                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                      <span>Unit: {product.unit}</span>
+                    </div>
+                    <span class="text-xs text-gray-400">
+                      {new Date(product.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            {/each}
+          </div>
+        {:else}
+          <!-- Empty State -->
+          <div class="bg-white border border-gray-100 rounded-xl p-12 text-center">
+            <div class="max-w-md mx-auto">
+              <div class="w-24 h-24 bg-gradient-to-r from-blue-100 to-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-900 mb-3">No products yet</h3>
+              <p class="text-gray-600 mb-8">Start by adding your first product to showcase to customers</p>
+              <button
+                on:click={() => showAddProductModal = true}
+                class="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 text-lg font-medium shadow-lg hover:shadow-xl"
+              >
+                Add Your First Product
+              </button>
+            </div>
+          </div>
+        {/if}
+      </div>
+
+      <!-- VENDOR PROFILE SECTION -->
       <div class="mb-8 bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
         <div class="px-6 py-5 border-b border-gray-100">
           <h2 class="text-xl font-bold text-gray-900">Business Profile</h2>
@@ -619,115 +723,6 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Products Section -->
-      <div class="mb-8">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-          <div>
-            <h2 class="text-2xl font-bold text-gray-900">My Products</h2>
-            <p class="text-gray-600 mt-1">Manage your product listings and inventory</p>
-          </div>
-          <div class="mt-4 sm:mt-0">
-            <button
-              on:click={() => showAddProductModal = true}
-              class="px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center shadow hover:shadow-lg"
-            >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add New Product
-            </button>
-          </div>
-        </div>
-
-        <!-- Products Grid -->
-        {#if data.products && data.products.length > 0}
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {#each data.products as product (product.id)}
-              <div class="bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-lg transition-shadow duration-300 group">
-                <!-- Product Image -->
-                <div class="h-48 bg-gray-100 relative overflow-hidden">
-                  {#if product.image}
-                    <img
-                      src={getStrapiImageUrl(product.image)}
-                      alt={product.name}
-                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  {:else}
-                    <div class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                      <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  {/if}
-                  
-                  <!-- Price Badge -->
-                  <div class="absolute top-3 left-3">
-                    <span class="px-3 py-1 bg-green-600 text-white text-sm font-bold rounded-full shadow">
-                      {formatPrice(product.price)}
-                    </span>
-                  </div>
-                  
-                  <!-- Delete Button -->
-                  <button
-                    on:click={() => deleteProductHandler(product.id)}
-                    class="absolute top-3 right-3 bg-white text-red-600 p-2 rounded-full hover:bg-red-50 shadow opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                    title="Delete product"
-                  >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-                
-                <!-- Product Details -->
-                <div class="p-5">
-                  <div class="flex justify-between items-start mb-3">
-                    <h3 class="font-bold text-gray-900 text-lg line-clamp-1">{capitalize(product.name)}</h3>
-                  </div>
-                  
-                  {#if product.description}
-                    <p class="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
-                  {:else}
-                    <p class="text-gray-400 text-sm mb-4 italic">No description provided</p>
-                  {/if}
-                  
-                  <div class="flex justify-between items-center pt-4 border-t border-gray-100">
-                    <div class="flex items-center text-sm text-gray-500">
-                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                      </svg>
-                      <span>Unit: {product.unit}</span>
-                    </div>
-                    <span class="text-xs text-gray-400">
-                      {new Date(product.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            {/each}
-          </div>
-        {:else}
-          <!-- Empty State -->
-          <div class="bg-white border border-gray-100 rounded-xl p-12 text-center">
-            <div class="max-w-md mx-auto">
-              <div class="w-24 h-24 bg-gradient-to-r from-blue-100 to-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg class="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-              </div>
-              <h3 class="text-2xl font-bold text-gray-900 mb-3">No products yet</h3>
-              <p class="text-gray-600 mb-8">Start by adding your first product to showcase to customers</p>
-              <button
-                on:click={() => showAddProductModal = true}
-                class="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 text-lg font-medium shadow-lg hover:shadow-xl"
-              >
-                Add Your First Product
-              </button>
-            </div>
-          </div>
-        {/if}
       </div>
     </main>
   </div>

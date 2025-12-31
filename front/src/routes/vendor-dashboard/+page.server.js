@@ -1,5 +1,6 @@
 // src/routes/vendor-dashboard/+page.server.js
 import { redirect } from '@sveltejs/kit';
+import { STRAPI_URL } from '$lib/strapi';
 
 export const load = async ({ cookies, fetch }) => {
   const jwt = cookies.get('jwt');
@@ -33,9 +34,8 @@ export const load = async ({ cookies, fetch }) => {
     if (!currentVendorId) {
       console.log('🔄 No vendorId cookie, checking for vendor profile...');
       
-      // CORRECT QUERY: Use users_permissions_user
       const vendorRes = await fetch(
-        `http://localhost:1337/api/vendors?filters[users_permissions_user][id][$eq]=${user.id}&populate=*`,
+        `${STRAPI_URL}/api/vendors?filters[users_permissions_user][id][$eq]=${user.id}&populate=*`,
         { 
           headers: { 
             'Authorization': `Bearer ${jwt}`,
@@ -77,7 +77,7 @@ export const load = async ({ cookies, fetch }) => {
       console.log('📥 Loading vendor data for ID:', currentVendorId);
       
       const vendorRes = await fetch(
-        `http://localhost:1337/api/vendors/${currentVendorId}?populate=*`,
+        `${STRAPI_URL}/api/vendors/${currentVendorId}?populate=*`,
         { 
           headers: { 
             'Authorization': `Bearer ${jwt}`,
@@ -103,20 +103,60 @@ export const load = async ({ cookies, fetch }) => {
     if (currentVendorId) {
       console.log('📦 Loading products for vendor:', currentVendorId);
       
-      const productsRes = await fetch(
-        `http://localhost:1337/api/products?filters[vendor][id][$eq]=${currentVendorId}&populate=*&sort=createdAt:desc`,//this is not fetching products.Debug it to fetch according o strapi5 syntax.
-        { 
-          headers: { 
-            'Authorization': `Bearer ${jwt}`,
-            'Content-Type': 'application/json'
-          } 
+      try {
+        // Fetch products filtered by vendor (many-to-many relation)
+        const productsRes = await fetch(
+          `${STRAPI_URL}/api/products?populate=*&filters[vendors][id][$eq]=${currentVendorId}&sort=createdAt:desc`,
+          { 
+            headers: { 
+              'Authorization': `Bearer ${jwt}`,
+              'Content-Type': 'application/json'
+            } 
+          }
+        );
+        
+        if (productsRes.ok) {
+          const productsData = await productsRes.json();
+          products = productsData.data || [];
+          console.log('✅ Products loaded:', products.length);
+          
+          // Debug: Log the first product to see structure
+          if (products.length > 0) {
+            console.log('🔍 First product:', {
+              id: products[0].id,
+              name: products[0].name,
+              vendors: products[0].vendors
+            });
+          }
+        } else {
+          console.log('❌ Products fetch failed:', productsRes.status);
+          
+          // Try alternative: fetch all products and filter client-side
+          const allProductsRes = await fetch(
+            `${STRAPI_URL}/api/products?populate=*&sort=createdAt:desc`,
+            { 
+              headers: { 
+                'Authorization': `Bearer ${jwt}`,
+                'Content-Type': 'application/json'
+              } 
+            }
+          );
+          
+          if (allProductsRes.ok) {
+            const allProductsData = await allProductsRes.json();
+            const allProducts = allProductsData.data || [];
+            
+            // Filter products that have currentVendorId in their vendors array
+            products = allProducts.filter(product => {
+              if (!product.vendors || !Array.isArray(product.vendors)) return false;
+              return product.vendors.some(v => v.id === parseInt(currentVendorId));
+            });
+            
+            console.log('✅ Products filtered client-side:', products.length);
+          }
         }
-      );
-      
-      if (productsRes.ok) {
-        const productsData = await productsRes.json();
-        products = productsData.data || [];
-        console.log('✅ Products loaded:', products.length);
+      } catch (productsError) {
+        console.error('💥 Products fetch error:', productsError);
       }
     }
     
@@ -126,7 +166,7 @@ export const load = async ({ cookies, fetch }) => {
       console.log('🏪 Loading markets...');
       
       const marketsRes = await fetch(
-        `http://localhost:1337/api/markets?populate=*`,
+        `${STRAPI_URL}/api/markets?populate=*`,
         { 
           headers: { 
             'Authorization': `Bearer ${jwt}`,
@@ -146,12 +186,19 @@ export const load = async ({ cookies, fetch }) => {
     
     // Return data to page
     console.log('🎉 Dashboard load successful');
+    console.log('📊 Summary:', {
+      user: user.email,
+      vendor: vendor?.name,
+      products: products.length,
+      markets: markets.length
+    });
+    
     return {
       user,
       vendor,
       products,
       markets,
-      jwt // Pass JWT to frontend if needed
+      jwt
     };
     
   } catch (error) {
