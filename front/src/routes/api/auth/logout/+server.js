@@ -1,35 +1,48 @@
-// src/routes/auth/logout/+server.js
-import { redirect } from '@sveltejs/kit';
-
+// src/routes/api/auth/logout/+server.js
 export async function POST({ cookies }) {
-  console.log('🚪 POST logout requested');
-  
-  // Get user info for logging
-  const userCookie = cookies.get('user');
-  const user = userCookie ? JSON.parse(userCookie) : null;
-  console.log('👤 Logging out:', user?.email || 'Unknown');
-  
-  // Clear all auth cookies
-  cookies.delete('jwt', { path: '/' });
-  cookies.delete('user', { path: '/' });
-  cookies.delete('vendorId', { path: '/' });
-  cookies.delete('vendor', { path: '/' });
-  
-  console.log('✅ Cookies cleared');
-  
-  // Always redirect to home page
-  throw redirect(303, '/');
-}
-
-export async function GET({ cookies }) {
-  console.log('🚪 GET logout requested');
-  
-  // Clear all auth cookies
-  cookies.delete('jwt', { path: '/' });
-  cookies.delete('user', { path: '/' });
-  cookies.delete('vendorId', { path: '/' });
-  cookies.delete('vendor', { path: '/' });
-  
-  // Redirect to home page
-  throw redirect(303, '/');
+  try {
+    // Clear all auth cookies
+    cookies.set('jwt', '', {
+      path: '/',
+      expires: new Date(0),
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production'
+    });
+    
+    cookies.set('user', '', {
+      path: '/',
+      expires: new Date(0),
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production'
+    });
+    
+    cookies.set('vendor', '', {
+      path: '/',
+      expires: new Date(0),
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production'
+    });
+    
+    cookies.set('vendorId', '', {
+      path: '/',
+      expires: new Date(0),
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production'
+    });
+    
+    console.log('✅ Logout: All cookies cleared');
+    
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+  } catch (error) {
+    console.error('❌ Logout error:', error);
+    return new Response(JSON.stringify({ success: false, error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
 }

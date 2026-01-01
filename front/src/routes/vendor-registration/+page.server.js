@@ -1,210 +1,203 @@
-// src/routes/vendor-registration/+page.server.js
-export const actions = {
-  register: async ({ request, cookies, fetch }) => {
-    try {
-      const formData = await request.formData();
-      const username = formData.get('username');
-      const email = formData.get('email');
-      const password = formData.get('password');
-      const confirmPassword = formData.get('confirmPassword');
-      
-      // Validation
-      if (!username || !email || !password) {
-        return {
-          success: false,
-          error: 'All fields are required'
-        };
-      }
-      
-      if (password !== confirmPassword) {
-        return {
-          success: false,
-          error: 'Passwords do not match'
-        };
-      }
-      
-      if (password.length < 6) {
-        return {
-          success: false,
-          error: 'Password must be at least 6 characters'
-        };
-      }
-      
-      // Register user
-      const registerRes = await fetch('http://localhost:1337/api/auth/local/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: username.trim(),
-          email: email.trim().toLowerCase(),
-          password: password
-        })
-      });
-      
-      if (!registerRes.ok) {
-        const errorData = await registerRes.json();
-        return {
-          success: false,
-          error: errorData.error?.message || 'Registration failed'
-        };
-      }
-      
-      const authData = await registerRes.json();
-      const jwt = authData.jwt;
-      const user = authData.user;
-      
-      // Set JWT cookie
-      cookies.set('jwt', jwt, {
-        path: '/',
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: false,
-        maxAge: 60 * 60 * 24 * 30
-      });
-      
-      return {
-        success: true,
-        message: 'Registration successful!',
-        user,
-        redirectTo: '/vendor-registration?completeProfile=true'
-      };
-      
-    } catch (error) {
-      console.error('Registration error:', error);
-      return {
-        success: false,
-        error: error.message || 'Registration failed'
-      };
-    }
-  },
+// src/routes/vendor-dashboard/+page.server.js
+import { redirect } from '@sveltejs/kit';
+
+export const load = async ({ cookies, fetch, url }) => {
+  console.log('📄 Dashboard server load started');
   
-  completeProfile: async ({ request, cookies, fetch }) => {
-    try {
-      const jwt = cookies.get('jwt');
-      if (!jwt) {
-        return {
-          success: false,
-          error: 'Not authenticated'
-        };
-      }
-      
-      const formData = await request.formData();
-      const vendorName = formData.get('vendorName');
-      const marketId = formData.get('marketId');
-      const description = formData.get('description');
-      const contact = formData.get('contact');
-      
-      if (!vendorName) {
-        return {
-          success: false,
-          error: 'Vendor name is required'
-        };
-      }
-      
-      // Get current user ID
-      const userRes = await fetch('http://localhost:1337/api/users/me', {
-        headers: { 'Authorization': `Bearer ${jwt}` }
-      });
-      
-      if (!userRes.ok) {
-        return {
-          success: false,
-          error: 'Failed to verify user'
-        };
-      }
-      
-      const user = await userRes.json();
-      
-      // Create vendor
-      const vendorRes = await fetch('http://localhost:1337/api/vendors', {
-        method: 'POST',
+  const jwt = cookies.get('jwt');
+  const userCookie = cookies.get('user');
+  
+  console.log('🔐 Auth check:', {
+    hasJWT: !!jwt,
+    hasUser: !!userCookie,
+    pathname: url.pathname
+  });
+  
+  // Redirect to login if not authenticated
+  if (!jwt || !userCookie) {
+    console.log('❌ No auth, redirecting to login');
+    throw redirect(302, '/vendor-login');
+  }
+  
+  let user;
+  try {
+    user = JSON.parse(userCookie);
+    console.log('👤 User parsed:', user.email);
+  } catch (e) {
+    console.error('Failed to parse user cookie:', e);
+    throw redirect(302, '/vendor-login');
+  }
+  
+  // Get vendor data
+  let vendor = null;
+  let vendorId = null;
+  let products = [];
+  
+  try {
+    // Get vendor by user ID - FIXED for Strapi 5
+    console.log('🔍 Fetching vendor for user ID:', user.id);
+    const vendorRes = await fetch(
+      `http://localhost:1337/api/vendors?filters[users_permissions_user][id][$eq]=${user.id}&populate=*`,
+      {
         headers: {
           'Authorization': `Bearer ${jwt}`,
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          data: {
-            name: vendorName.trim(),
-            description: description?.trim(),
-            contact: contact?.trim(),
-            users_permissions_user: user.id,
-            market: marketId || null
-          }
-        })
-      });
-      
-      if (!vendorRes.ok) {
-        const errorData = await vendorRes.json();
-        return {
-          success: false,
-          error: errorData.error?.message || 'Failed to create vendor profile'
-        };
+        }
       }
-      
+    );
+    
+    if (vendorRes.ok) {
       const vendorData = await vendorRes.json();
-      const vendor = vendorData.data || vendorData;
+      console.log('📦 Vendor response data:', vendorData);
       
-      // Set vendor cookie
-      cookies.set('vendorId', vendor.id.toString(), {
-        path: '/',
-        sameSite: 'lax',
-        secure: false,
-        maxAge: 60 * 60 * 24 * 30
-      });
-      
-      return {
-        success: true,
-        message: 'Vendor profile created successfully!',
-        vendor,
-        redirectTo: '/vendor-dashboard'
-      };
-      
-    } catch (error) {
-      console.error('Complete profile error:', error);
-      return {
-        success: false,
-        error: error.message || 'Failed to complete profile'
-      };
-    }
-  }
-};
-
-export async function load({ cookies, fetch, url }) {
-  const jwt = cookies.get('jwt');
-  const vendorId = cookies.get('vendorId');
-  
-  // If user is logged in and has a vendor, redirect to dashboard
-  if (jwt && vendorId) {
-    // Check if vendor exists
-    try {
-      const vendorRes = await fetch(`http://localhost:1337/api/vendors/${vendorId}`, {
-        headers: { 'Authorization': `Bearer ${jwt}` }
-      });
-      
-      if (vendorRes.ok) {
-        // Vendor exists, redirect to dashboard
-        return {
-          redirectTo: '/vendor-dashboard'
-        };
+      if (vendorData.data && vendorData.data.length > 0) {
+        vendor = vendorData.data[0];
+        vendorId = vendor.id;
+        console.log('✅ Vendor found:', vendor.name || 'Vendor has no name');
+        
+        // Update vendor cookies
+        cookies.set('vendor', JSON.stringify(vendor), {
+          path: '/',
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 60 * 60 * 24 * 7
+        });
+        
+        cookies.set('vendorId', vendorId.toString(), {
+          path: '/',
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 60 * 60 * 24 * 7
+        });
+        
+        // ==============================================
+        // PRODUCT FETCH LOGIC - UPDATED FOR STRAPI 5
+        // ==============================================
+        console.log('🛍️ Fetching products for vendor ID:', vendorId);
+        
+        // METHOD 1: Try fetching via vendor's populated products first
+        if (vendor.products && Array.isArray(vendor.products)) {
+          products = vendor.products;
+          console.log('✅ Found products in vendor.populate:', products.length);
+        } 
+        
+        // METHOD 2: If no products in vendor.populate, try direct query
+        if (products.length === 0) {
+          console.log('🔄 Trying direct products query...');
+          
+          // Get ALL products and filter by vendor
+          const allProductsRes = await fetch(
+            `http://localhost:1337/api/products?populate=*`,
+            {
+              headers: {
+                'Authorization': `Bearer ${jwt}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+          
+          if (allProductsRes.ok) {
+            const allProductsData = await allProductsRes.json();
+            console.log('📦 All products raw data:', allProductsData);
+            
+            if (allProductsData.data && Array.isArray(allProductsData.data)) {
+              // Filter products that have this vendor in their vendors array
+              products = allProductsData.data.filter(product => {
+                // Check if product has vendors relation
+                if (product.vendors && Array.isArray(product.vendors)) {
+                  return product.vendors.some(v => v.id === vendorId);
+                }
+                return false;
+              });
+              
+              console.log('✅ Filtered products for vendor:', products.length);
+            }
+          } else {
+            console.error('❌ Products fetch failed:', allProductsRes.status);
+          }
+        }
+        
+        // METHOD 3: Try using the vendors filter in query
+        if (products.length === 0) {
+          console.log('🔄 Trying vendors filter in query...');
+          
+          const filteredProductsRes = await fetch(
+            `http://localhost:1337/api/products?filters[vendors][id][$eq]=${vendorId}&populate=*`,
+            {
+              headers: {
+                'Authorization': `Bearer ${jwt}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+          
+          if (filteredProductsRes.ok) {
+            const filteredProductsData = await filteredProductsRes.json();
+            console.log('📦 Filtered products response:', filteredProductsData);
+            
+            if (filteredProductsData.data && Array.isArray(filteredProductsData.data)) {
+              products = filteredProductsData.data;
+              console.log('✅ Found products via filter query:', products.length);
+            }
+          }
+        }
+        
+      } else {
+        console.log('📝 No vendor profile found for user');
+        // Don't redirect - let user create profile
       }
-    } catch (error) {
-      // Vendor check failed, continue
+    } else {
+      console.error('❌ Vendor fetch failed:', vendorRes.status);
+      // Check if it's an authorization error
+      if (vendorRes.status === 401 || vendorRes.status === 403) {
+        console.error('⚠️ JWT token might be invalid/expired');
+        // Clear invalid cookies
+        cookies.delete('jwt', { path: '/' });
+        cookies.delete('user', { path: '/' });
+        throw redirect(302, '/vendor-login');
+      }
     }
+    
+  } catch (error) {
+    console.error('💥 Error loading vendor data:', error);
   }
   
   // Get markets for dropdown
   let markets = [];
   try {
-    const marketsRes = await fetch('http://localhost:1337/api/markets');
+    console.log('🏪 Fetching markets...');
+    const marketsRes = await fetch('http://localhost:1337/api/markets?populate=*', {
+      headers: {
+        'Authorization': `Bearer ${jwt}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
     if (marketsRes.ok) {
       const marketsData = await marketsRes.json();
       markets = marketsData.data || [];
+      console.log('✅ Markets loaded:', markets.length);
+    } else {
+      console.error('❌ Markets fetch failed:', marketsRes.status);
     }
   } catch (error) {
-    console.log('Failed to fetch markets:', error);
+    console.error('❌ Failed to fetch markets:', error);
   }
   
+  console.log('🎯 Dashboard load complete:', {
+    user: user.email,
+    vendor: vendor?.name || 'No vendor',
+    products: products.length,
+    markets: markets.length
+  });
+  
   return {
-    markets
+    user,
+    vendor,
+    vendorId,
+    products,
+    markets,
+    isAuthenticated: true,
+    hasVendorProfile: !!vendor
   };
-}
+};

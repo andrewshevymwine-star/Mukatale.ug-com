@@ -1,10 +1,10 @@
-// $lib/strapi.js
+// src/lib/strapi.js
 import { browser } from '$app/environment';
 
 // Strapi API URL
 export const STRAPI_URL = import.meta.env.PUBLIC_STRAPI_URL || 'http://localhost:1337';
 
-// Helper to get full image URL
+// Helper to get full image URL for Strapi v5
 export function getStrapiImageUrl(image) {
   if (!image) return null;
   
@@ -18,15 +18,9 @@ export function getStrapiImageUrl(image) {
     return `${STRAPI_URL}${image.startsWith('/') ? image : '/' + image}`;
   }
   
-  // Strapi v5 format
+  // Strapi v5 format - image is an object with url property
   if (image.url) {
     const url = image.url;
-    return url.startsWith('http') ? url : `${STRAPI_URL}${url}`;
-  }
-  
-  // Strapi v4 format
-  if (image.data?.attributes?.url) {
-    const url = image.data.attributes.url;
     return url.startsWith('http') ? url : `${STRAPI_URL}${url}`;
   }
   
@@ -73,12 +67,17 @@ export async function uploadFile(file, jwt) {
   return response.json();
 }
 
-// Create product - FIXED for Strapi v5
+// Create product - Strapi v5 format
 export async function createProduct(productData, jwt) {
   if (!browser) throw new Error('Browser required');
   if (!jwt) throw new Error('JWT required');
   
   console.log('Creating product with data:', productData);
+  
+  // Strapi v5 format
+  const formattedData = {
+    data: productData
+  };
   
   const response = await fetch(`${STRAPI_URL}/api/products`, {
     method: 'POST',
@@ -86,7 +85,7 @@ export async function createProduct(productData, jwt) {
       'Authorization': `Bearer ${jwt}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(productData)
+    body: JSON.stringify(formattedData)
   });
   
   if (!response.ok) {
@@ -129,12 +128,49 @@ export async function deleteProduct(productId, jwt) {
   }
 }
 
-// Update vendor
+// Get vendor details - Strapi v5 format
+export async function getVendor(vendorId, jwt) {
+  if (!browser) throw new Error('Browser required');
+  if (!jwt) throw new Error('JWT required');
+  
+  console.log('Getting vendor:', vendorId);
+  
+  // Include all relations: market, products, and user
+  const response = await fetch(
+    `${STRAPI_URL}/api/vendors/${vendorId}?populate[market]=*&populate[products]=*&populate[image]=*&populate[users_permissions_user]=*`,
+    {
+      headers: {
+        'Authorization': `Bearer ${jwt}`
+      }
+    }
+  );
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Get vendor error:', errorText);
+    throw new Error(`Failed to get vendor: ${response.status} - ${errorText}`);
+  }
+  
+  const data = await response.json();
+  
+  // Strapi v5 returns data directly
+  return {
+    id: data.data.id,
+    ...data.data
+  };
+}
+
+// Update vendor - Strapi v5 format
 export async function updateVendor(vendorId, vendorData, jwt) {
   if (!browser) throw new Error('Browser required');
   if (!jwt) throw new Error('JWT required');
   
   console.log('Updating vendor:', vendorId, vendorData);
+  
+  // Strapi v5 format
+  const formattedData = {
+    data: vendorData
+  };
   
   const response = await fetch(`${STRAPI_URL}/api/vendors/${vendorId}`, {
     method: 'PUT',
@@ -142,7 +178,7 @@ export async function updateVendor(vendorId, vendorData, jwt) {
       'Authorization': `Bearer ${jwt}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(vendorData)
+    body: JSON.stringify(formattedData)
   });
   
   if (!response.ok) {
@@ -151,7 +187,72 @@ export async function updateVendor(vendorId, vendorData, jwt) {
     throw new Error(`Failed to update vendor: ${response.status} - ${errorText}`);
   }
   
-  return response.json();
+  const data = await response.json();
+  
+  // Strapi v5 returns data directly
+  return {
+    id: data.data.id,
+    ...data.data
+  };
+}
+
+// Get vendor by user ID - Strapi v5 format
+export async function getVendorByUserId(userId, jwt) {
+  if (!browser) throw new Error('Browser required');
+  if (!jwt) throw new Error('JWT required');
+  
+  console.log('Getting vendor for user:', userId);
+  
+  const response = await fetch(
+    `${STRAPI_URL}/api/vendors?filters[users_permissions_user][id][$eq]=${userId}&populate[market]=*&populate[products]=*&populate[image]=*`,
+    {
+      headers: {
+        'Authorization': `Bearer ${jwt}`
+      }
+    }
+  );
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Get vendor by user error:', errorText);
+    throw new Error(`Failed to get vendor: ${response.status} - ${errorText}`);
+  }
+  
+  const data = await response.json();
+  
+  // Strapi v5 returns array of data
+  if (data.data && data.data.length > 0) {
+    return {
+      id: data.data[0].id,
+      ...data.data[0]
+    };
+  }
+  
+  return null;
+}
+
+// Get all markets for dropdown
+export async function getMarkets(jwt) {
+  if (!browser) throw new Error('Browser required');
+  if (!jwt) throw new Error('JWT required');
+  
+  const response = await fetch(`${STRAPI_URL}/api/markets?populate=*`, {
+    headers: {
+      'Authorization': `Bearer ${jwt}`
+    }
+  });
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Get markets error:', errorText);
+    throw new Error(`Failed to get markets: ${response.status} - ${errorText}`);
+  }
+  
+  const data = await response.json();
+  return data.data.map(market => ({
+    id: market.id,
+    ...market
+  }));
 }
 
 // Capitalize text
