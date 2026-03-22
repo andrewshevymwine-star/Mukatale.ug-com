@@ -1,0 +1,195 @@
+<script>
+  // Optional: market click handler
+  function handleMarketClick(market) {
+    console.log(`Selected market: ${market}`);
+    // In a real app, you'd navigate or fetch data
+  }
+</script>
+
+<main class="container">
+  <!-- Header -->
+  <header class="header">
+    <h1 class="title">Mukatale.ug</h1>
+    <div class="auth-buttons">
+      <button class="auth-btn">Login</button>
+      <button class="auth-btn">Signup</button>
+    </div>
+  </header>
+
+  <!-- Tagline -->
+  <p class="tagline">
+    Discover the latest grocery prices across<br />
+    different Ugandan markets
+  </p>
+
+  <!-- Categories -->
+  <div class="categories">
+    <span>Fruits</span> <span>Vegetables</span> <span>Nuts</span>
+    <span>Cereals</span> <span>Meat</span> <span>Chicken</span>
+  </div>
+
+  <!-- Search -->
+  <div class="search-container">
+    <input type="text" placeholder="search groceries and markets" class="search-input" />
+  </div>
+
+  <!-- Featured Markets section -->
+  <div class="featured-section">
+    <h2 class="featured-title">Featured markets</h2>
+    <div class="market-buttons">
+      <button class="market-btn" on:click={() => handleMarketClick('Busega')}>BUSEGA</button>
+      <button class="market-btn" on:click={() => handleMarketClick('Ggaba')}>GGABA</button>
+      <button class="market-btn" on:click={() => handleMarketClick('Kaleerwe')}>KALEERWE</button>
+      <button class="market-btn" on:click={() => handleMarketClick('Nakawa')}>NAKAWA</button>
+      <!-- Extra market from original design (Ggaba duplicate) – you can change or remove -->
+      <button class="market-btn" on:click={() => handleMarketClick('Ggaba')}>GGABA</button>
+    </div>
+  </div>
+
+  <!-- Advertising space -->
+  <div class="ad-space">
+    advertising space
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    copyright information here!
+  </footer>
+</main>
+
+<style>
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .title {
+    font-family: 'Snell Roundhand', 'Bradley Hand', cursive;
+    font-weight: 900;
+    font-size: 2rem;
+    color: #000;
+    margin: 0;
+  }
+
+  .auth-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .auth-btn {
+    background: none;
+    border: 1px solid #000;
+    border-radius: 4px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+
+  .tagline {
+    font-size: 0.9rem;
+    margin: 0.5rem 0 0.5rem 0;
+    line-height: 1.4;
+  }
+
+  .categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+    color: #333;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 0.5rem;
+  }
+
+  .search-container {
+    margin: 1rem 0;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background: #f9f9f9;
+  }
+
+  .featured-section {
+    margin: 1.5rem 0;
+  }
+
+  .featured-title {
+    font-size: 0.9rem;
+    font-weight: normal;
+    margin-bottom: 0.5rem;
+    color: #ff0000;
+  }
+
+  .market-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .market-btn {
+    background-color: #00aa00;
+    border: none;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    color: white;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .market-btn:hover {
+    background-color: #008800;
+  }
+
+  .ad-space {
+    background-color: #ccc;
+    color: #fff;
+    text-align: center;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    border-radius: 4px;
+    background: rgba(0,0,0,0.3);
+  }
+
+  .footer {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #666;
+    border-top: 1px solid #eee;
+    padding-top: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 600px) {
+    .title {
+      font-size: 1.5rem;
+    }
+    .auth-btn {
+      font-size: 0.75rem;
+    }
+    .market-btn {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+    }
+  }
+</style>
