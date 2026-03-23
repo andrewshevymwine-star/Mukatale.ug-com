@@ -124,7 +124,7 @@
   <header class="bg-green-700 text-white sticky top-0 z-10 shadow-md">
     <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center space-x-3">
-        <img src="/logo.svg" alt="Mukatale" class="w-12 h-12 rounded-lg" on:error={(e) => e.target.style.display = 'none'} />
+       <!-- <img src="/logo.svg" alt="Mukatale" class="w-12 h-12 rounded-lg" on:error={(e) => e.target.style.display = 'none'} />-->
         <span class="title-font text-white">Mukatale.ug</span>
       </div>
       <div class="flex items-center space-x-4">
