@@ -1,20 +1,16 @@
-export default {
+'use strict';
+
+module.exports = {
   register({ strapi }) {
-    // This middleware forces Strapi to treat the request as HTTPS
-    // when Render sends the X-Forwarded-Proto header
+    // 🔥 This fixes "Cannot send secure cookie over unencrypted connection"
+    // on Render / any proxy that terminates HTTPS
     strapi.server.use(async (ctx, next) => {
-      const isHttps =
-        ctx.get('X-Forwarded-Proto') === 'https' ||
-        ctx.get('X-Forwarded-Protocol') === 'https' ||
-        ctx.get('X-Forwarded-Ssl') === 'on';
-
-      if (isHttps) {
-        ctx.request.secure = true;
-        ctx.protocol = 'https';
+      if (ctx.req?.socket) {
+        ctx.req.socket.encrypted = true;
       }
-
       await next();
     });
   },
+
   bootstrap({ strapi }) {},
 };
