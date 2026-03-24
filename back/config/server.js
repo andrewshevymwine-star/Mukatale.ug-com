@@ -14,4 +14,5 @@ module.exports = ({ env }) => ({
   proxy: true,
   // Set the public URL explicitly (use your full HTTPS URL)
   url: env('PUBLIC_URL', 'https://mukatale-ug-com.onrender.com'),
+  
 });
