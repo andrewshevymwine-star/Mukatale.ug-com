@@ -1,20 +1,20 @@
-'use strict';
+export default {
+  register({ strapi }) {
+    // This middleware forces Strapi to treat the request as HTTPS
+    // when Render sends the X-Forwarded-Proto header
+    strapi.server.use(async (ctx, next) => {
+      const isHttps =
+        ctx.get('X-Forwarded-Proto') === 'https' ||
+        ctx.get('X-Forwarded-Protocol') === 'https' ||
+        ctx.get('X-Forwarded-Ssl') === 'on';
 
-module.exports = {
-  /**
-   * An asynchronous register function that runs before
-   * your application is initialized.
-   *
-   * This gives you an opportunity to extend code.
-   */
-  register(/*{ strapi }*/) {},
+      if (isHttps) {
+        ctx.request.secure = true;
+        ctx.protocol = 'https';
+      }
 
-  /**
-   * An asynchronous bootstrap function that runs before
-   * your application gets started.
-   *
-   * This gives you an opportunity to set up your data model,
-   * run jobs, or perform some special logic.
-   */
-  bootstrap(/*{ strapi }*/) {},
+      await next();
+    });
+  },
+  bootstrap({ strapi }) {},
 };
