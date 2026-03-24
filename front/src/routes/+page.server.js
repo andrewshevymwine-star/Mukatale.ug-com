@@ -1,10 +1,11 @@
+const STRAPI_URL = process.env.STRAPI_URL || 'http://localhost:1337';
 export async function load({ fetch }) {
   try {
     console.log('🚀 Fetching markets from Strapi v5...');
     
     // STRAPI v5 API CALL - FLAT STRUCTURE
     const response = await fetch(
-      'http://localhost:1337/api/markets?' +
+      `${STRAPI_URL}/api/markets?` +  
       'populate[vendors][populate][0]=image' +
       '&populate[vendors][populate][1]=products' +
       '&populate[vendors][populate][products][populate][0]=image' +
@@ -130,3 +131,9 @@ export async function load({ fetch }) {
     };
   }
 }
+
+
+
+
+
+
