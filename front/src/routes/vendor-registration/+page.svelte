@@ -357,7 +357,7 @@
   .brand-panel {
     width: 380px;
     flex-shrink: 0;
-    background: #238942;
+    background: #1a5c2e;
     color: #fff;
     display: flex;
     flex-direction: column;
@@ -369,11 +369,11 @@
   }
 
   .brand-logo {
-    font-family: 'DM Serif Display', serif;
+    font-family: 'Snell Roundhand', 'Bradley Hand', cursive;
     font-size: 1.5rem;
+    font-weight: 700;
     color: #fff;
     text-decoration: none;
-    letter-spacing: -0.02em;
   }
 
   .brand-body {
@@ -529,7 +529,7 @@
 
   input:focus {
     outline: none;
-    border-color: #2aa14e;
+    border-color: #1a5c2e;
     box-shadow: 0 0 0 3px rgba(26,92,46,0.1);
   }
 
@@ -551,7 +551,7 @@
   }
 
   .input-with-prefix:focus-within {
-    border-color: #2b9a4c;
+    border-color: #1a5c2e;
     box-shadow: 0 0 0 3px rgba(26,92,46,0.1);
   }
 
@@ -664,7 +664,7 @@
   .submit-btn {
     width: 100%;
     padding: 15px 24px;
-    background: #2b9a4c;
+    background: #1a5c2e;
     color: #fff;
     font-family: 'DM Sans', sans-serif;
     font-size: 1rem;
@@ -680,7 +680,7 @@
   }
 
   .submit-btn:hover:not(:disabled) {
-    background: #31a052;
+    background: #154a25;
     transform: translateY(-1px);
   }
 
@@ -759,7 +759,7 @@
 
   .progress-fill {
     height: 100%;
-    background: #37cb63;
+    background: #1a5c2e;
     border-radius: 4px;
     animation: fill 2s linear forwards;
   }
