@@ -5,11 +5,11 @@ export const load = async ({ cookies }) => {
   const jwt = cookies.get('jwt');
   const userCookie = cookies.get('user');
 
-  // If already logged in, send them to the dashboard instead
+  // Already logged in → send to dashboard
   if (jwt && userCookie) {
     throw redirect(302, '/vendor-dashboard');
   }
 
-  // Otherwise, let them access the registration page freely
+  // Public page — no auth required
   return {};
 };
