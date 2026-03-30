@@ -10,9 +10,9 @@ module.exports = ({ env }) => ({
       secret: env('ADMIN_JWT_SECRET'),
     },
   },
-  // Trust the proxy headers (Render sets X-Forwarded-Proto)
-  proxy: true,
-  // Set the public URL explicitly (use your full HTTPS URL)
+  // ✅ Strapi 5 correct proxy config (this is what was missing)
+  proxy: { koa: true },
+
+  // Public URL (Render gives you HTTPS, so we force it)
   url: env('PUBLIC_URL', 'https://mukatale-ug-com.onrender.com'),
-  
 });
