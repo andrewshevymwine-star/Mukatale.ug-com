@@ -76,17 +76,28 @@
     error = '';
 
     try {
-      // Step 1: Register user account in Strapi
-      const { user, jwt } = await auth.register({
-        username: form.email,
-        email: form.email,
-        password: form.password
+      // Step 1: Register user account directly via Strapi
+      const registerRes = await fetch('http://localhost:1337/api/auth/local/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: form.email,
+          email: form.email,
+          password: form.password
+        })
       });
 
+      const registerData = await registerRes.json();
+
+      if (!registerRes.ok) {
+        throw new Error(registerData.error?.message || 'Registration failed');
+      }
+
+      const { jwt, user } = registerData;
       console.log('✅ User registered:', user.id);
 
       // Step 2: Create vendor profile linked to the new user
-      const vendorResponse = await fetch('http://localhost:1337/api/vendors', {
+      const vendorRes = await fetch('http://localhost:1337/api/vendors', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${jwt}`,
@@ -102,26 +113,37 @@
         })
       });
 
-      if (!vendorResponse.ok) {
-        const errorData = await vendorResponse.json();
-        throw new Error(errorData.error?.message || 'Failed to create vendor profile');
+      const vendorData = await vendorRes.json();
+
+      if (!vendorRes.ok) {
+        throw new Error(vendorData.error?.message || 'Failed to create vendor profile');
       }
 
-      const vendorResult = await vendorResponse.json();
-      const vendor = vendorResult.data;
-
+      const vendor = vendorData.data;
       console.log('✅ Vendor profile created:', vendor.id);
 
-      // Step 3: Set cookies for SSR
+      // Step 3: Update auth store with the correct method names
+      auth.updateFromServer({
+        user,
+        jwt,
+        vendor,
+        vendorId: vendor.id,
+        hasVendorProfile: true
+      });
+
+      // Step 4: Set SSR cookies
       if (browser) {
         const maxAge = 60 * 60 * 24 * 7;
         document.cookie = `jwt=${jwt}; path=/; max-age=${maxAge}; SameSite=Lax`;
-        document.cookie = `user=${JSON.stringify(user)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+        document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=${maxAge}; SameSite=Lax`;
         document.cookie = `vendorId=${vendor.id}; path=/; max-age=${maxAge}; SameSite=Lax`;
-      }
 
-      // Update auth store
-      auth.updateVendor(vendor);
+        // Also set localStorage (what the auth store reads on init)
+        localStorage.setItem('jwt', jwt);
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('vendor', JSON.stringify(vendor));
+        localStorage.setItem('vendorId', vendor.id);
+      }
 
       step = 2; // Show success state
 
@@ -131,7 +153,8 @@
 
     } catch (err) {
       console.error('Registration error:', err);
-      if (err.message?.toLowerCase().includes('already taken') || err.message?.toLowerCase().includes('email')) {
+      const msg = err.message?.toLowerCase() || '';
+      if (msg.includes('already taken') || msg.includes('email')) {
         error = 'This email is already registered. Try logging in instead.';
       } else {
         error = err.message || 'Something went wrong. Please try again.';
