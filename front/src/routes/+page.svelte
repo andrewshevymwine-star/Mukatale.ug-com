@@ -151,7 +151,7 @@
   <section class="bg-green-600 text-white py-10">
     <div class="max-w-7xl mx-auto px-4 text-center">
       <p class="text-lg md:text-xl">Discover the latest grocery prices across<br />different Ugandan markets</p>
-      <div class="flex flex-wrap justify-center gap-4 mt-6 text-sm">
+      <div class="flex flex-wrap justify-center gap-4 mt-6 text-lg">
         <span>Fruits</span> <span>Vegetables</span> <span>Nuts</span>
         <span>Cereals</span> <span>Meat</span> <span>Chicken</span>
       </div>
@@ -185,9 +185,9 @@
         {/if}
       </div>
       <!-- Separate red search button (square, no rounding) -->
-      <button class="bg-red-600 hover:bg-red-700 text-white w-12 h-12 flex items-center justify-center transition">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      <button class="bg-red-600 hover:bg-green-700 text-white w-12 h-12 flex items-center justify-center transition">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
       </button>
     </div>
@@ -347,14 +347,15 @@
 
   <!-- Footer -->
   <footer class="bg-white border-t border-gray-200 py-6 text-center text-sm text-gray-500">
-    copyright information here!
+    copyright: Mukatale-ug 2025. All rights reserved.
+    Site still under production! Designed and developed by andrewshevymwine-star
   </footer>
 </div>
 
 <style>
   .title-font {
     font-family: 'Snell Roundhand', 'Bradley Hand', cursive;
-    font-size: 1.5rem; /* text-2xl */
+    font-size: 2.5rem; /* text-2xl */
     font-weight: 700;   /* bold */
   }
   .line-clamp-2 {
