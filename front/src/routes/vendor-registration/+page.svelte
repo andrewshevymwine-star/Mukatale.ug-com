@@ -3,7 +3,8 @@
   import { auth } from '$lib/stores/auth';
   import { browser } from '$app/environment';
 
-  const STRAPI = import.meta.env.PUBLIC_STRAPI_URL;
+  import { PUBLIC_STRAPI_URL } from '$env/static/public';
+  const STRAPI = PUBLIC_STRAPI_URL;
 
   export let data;
 
