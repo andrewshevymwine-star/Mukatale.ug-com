@@ -78,7 +78,7 @@ export async function POST({ request, cookies }) {
         'Authorization': `Bearer ${jwt}`,
         'Content-Type':  'application/json'
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ data: payload })
     });
 
     if (!updateRes.ok) {
