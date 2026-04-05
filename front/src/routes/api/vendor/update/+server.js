@@ -18,7 +18,7 @@ export async function POST({ request, cookies }) {
 
     console.log('Updating vendor:', vendorId, formData);
 
-    // Prepare flat payload for Strapi v5 (NO { data: ... } wrapper)
+    // Prepare flat payload for Strapi v5
     const payload = {};
 
     if (formData.name?.trim()) payload.name = formData.name.trim();
@@ -65,7 +65,7 @@ export async function POST({ request, cookies }) {
         const uploaded = await uploadRes.json();
 
         if (uploaded?.length > 0) {
-          payload.image = uploaded[0].id;        // ← Important: use .id (not documentId)
+          payload.image = uploaded[0].id; // ← use .id (not documentId)
         }
       } catch (err) {
         console.error('Image upload error:', err);
@@ -103,7 +103,7 @@ export async function POST({ request, cookies }) {
         'Authorization': `Bearer ${jwt}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(payload)   // ← Flat payload (Strapi v5)
+      body: JSON.stringify({ data: payload })  // ← FIX: Strapi v5 content-type PUT requires { data: ... } wrapper
     });
 
     if (!updateRes.ok) {

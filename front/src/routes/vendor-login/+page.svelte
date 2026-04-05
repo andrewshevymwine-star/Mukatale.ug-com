@@ -106,7 +106,7 @@
 				<div class="mt-8 text-center">
 					<p class="text-sm text-gray-600">
 						Don't have an account? 
-						<a href="/vendor/register" class="text-green-600 hover:underline font-medium">
+						<a href="/vendor-registration" class="text-green-600 hover:underline font-medium">
 							Register Here
 						</a>
 					</p>
