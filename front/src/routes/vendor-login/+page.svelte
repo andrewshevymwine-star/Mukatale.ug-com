@@ -46,16 +46,18 @@
 					</div>
 				{/if}
 
-				<form method="POST" use:enhance={handleSubmit} class="space-y-6">
+				<!-- ✅ FIX 1: action="?/login" targets the named login action in +page.server.js -->
+				<form method="POST" action="?/login" use:enhance={handleSubmit} class="space-y-6">
 					<!-- Email Field -->
 					<div>
-						<label for="email" class="block text-sm font-medium text-gray-700 mb-1.5">
+						<label for="identifier" class="block text-sm font-medium text-gray-700 mb-1.5">
 							Email Address
 						</label>
+						<!-- ✅ FIX 2: name="identifier" matches formData.get('identifier') in the server -->
 						<input
 							type="email"
-							id="email"
-							name="email"
+							id="identifier"
+							name="identifier"
 							bind:value={email}
 							required
 							placeholder="enter your email"
@@ -128,7 +130,6 @@
 </div>
 
 <style>
-	/* Fallback + self-hosted font */
 	@font-face {
 		font-family: 'Snell Roundhand Bold';
 		src: url('/fonts/SnellRoundhand-Bold.woff2') format('woff2'),
@@ -138,7 +139,6 @@
 		font-display: swap;
 	}
 
-	/* Extra fallback */
 	@font-face {
 		font-family: 'Snell Roundhand';
 		src: url('/fonts/SnellRoundhand-Regular.woff2') format('woff2');
