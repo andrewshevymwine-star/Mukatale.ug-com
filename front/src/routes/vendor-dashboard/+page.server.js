@@ -30,7 +30,8 @@ export const load = async ({ cookies, fetch, url }) => {
     console.log('🔍 Fetching vendor for user ID:', user.id);
 
     const vendorRes = await fetch(
-      `${STRAPI}/api/vendors?filters[users_permissions_user][id][$eq]=${user.id}&populate[market][fields][0]=id&populate[market][fields][1]=name&populate[market][fields][2]=location`,
+      // ✅ FIX: Added populate[image]=* so the image field is returned on every load/refresh
+      `${STRAPI}/api/vendors?filters[users_permissions_user][id][$eq]=${user.id}&populate[market][fields][0]=id&populate[market][fields][1]=name&populate[market][fields][2]=location&populate[image][fields][0]=id&populate[image][fields][1]=url&populate[image][fields][2]=formats`,
       {
         headers: {
           'Authorization': `Bearer ${jwt}`,
