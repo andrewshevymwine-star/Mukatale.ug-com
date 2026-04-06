@@ -6,6 +6,8 @@
   import { browser } from '$app/environment';
   import { invalidateAll } from '$app/navigation';
   import { onMount } from 'svelte';
+  import  Slideshow  from '$lib/components/Slideshow.svelte';
+
 
   export let data;
 
@@ -341,9 +343,10 @@
   </section>
 
   <!-- Advertising space -->
-  <div class="bg-gray-200 text-center py-8 mx-auto max-w-7xl rounded-lg my-8">
-    <p class="text-gray-600">advertising space</p>
+  <div class="max-w-7xl mx-auto px-4 my-8">
+    <Slideshow />
   </div>
+  
 
   <!-- Footer -->
   <footer class="bg-white border-t border-gray-200 py-6 text-center text-sm text-gray-500">
