@@ -221,7 +221,7 @@
     .ss-stage {
       position: relative;
       width: 100%;
-      height: 460px;
+      height: 380px;
       overflow: hidden;
     }
   
@@ -451,7 +451,7 @@
   
     /* ── Responsive ── */
     @media (max-width: 600px) {
-      .ss-stage { height: 320px; }
+      .ss-stage { height: 180px; }
       .slide__story { padding: 1.75rem; }
       .arrow { display: none; }
       .thumb { width: 54px; height: 36px; }

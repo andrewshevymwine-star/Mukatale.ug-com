@@ -1,13 +1,11 @@
 <script>
-  // ============== All existing script code stays exactly as it was ==============
   import { getStrapiImageUrl, formatPrice } from '$lib/strapi.js';
   import { auth } from '$lib/stores/auth';
   import { goto } from '$app/navigation';
   import { browser } from '$app/environment';
   import { invalidateAll } from '$app/navigation';
   import { onMount } from 'svelte';
-  import  Slideshow  from '$lib/components/Slideshow.svelte';
-
+  import Slideshow from '$lib/components/Slideshow.svelte';
 
   export let data;
 
@@ -122,11 +120,11 @@
 </svelte:head>
 
 <div class="min-h-screen bg-gray-100">
-  <!-- Green header with logo, auth buttons -->
+
+  <!-- ── Header ── -->
   <header class="bg-green-700 text-white sticky top-0 z-10 shadow-md">
     <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center space-x-3">
-       <!-- <img src="/logo.svg" alt="Mukatale" class="w-12 h-12 rounded-lg" on:error={(e) => e.target.style.display = 'none'} />-->
         <span class="title-font text-white">Mukatale.ug</span>
       </div>
       <div class="flex items-center space-x-4">
@@ -149,7 +147,7 @@
     </div>
   </header>
 
-  <!-- Green hero section with tagline and timestamp -->
+  <!-- ── Hero ── -->
   <section class="bg-green-600 text-white py-10">
     <div class="max-w-7xl mx-auto px-4 text-center">
       <p class="text-lg md:text-xl">Discover the latest grocery prices across<br />different Ugandan markets</p>
@@ -163,10 +161,9 @@
     </div>
   </section>
 
-  <!-- Search bar (separate input and button) -->
+  <!-- ── Search bar ── -->
   <div class="max-w-2xl mx-auto px-4 my-8">
     <div class="flex gap-2 items-center">
-      <!-- Input container with light green border -->
       <div class="flex-1 relative border border-green-300 rounded-full overflow-hidden bg-white shadow-sm">
         <input
           type="text"
@@ -186,7 +183,6 @@
           </button>
         {/if}
       </div>
-      <!-- Separate red search button (square, no rounding) -->
       <button class="bg-red-600 hover:bg-green-700 text-white w-12 h-12 flex items-center justify-center transition">
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -195,7 +191,7 @@
     </div>
   </div>
 
-  <!-- Markets list -->
+  <!-- ── Markets list ── -->
   <section id="markets" class="max-w-7xl mx-auto px-4 pb-12">
     {#if data?.error}
       <div class="p-4 bg-red-100 text-red-700 rounded-lg text-center">
@@ -233,7 +229,6 @@
         {@const isExpanded = expandedMarkets.has(marketId)}
 
         <div id={`market-${marketId}`} class="bg-white rounded-lg shadow mb-5 overflow-hidden transition-all">
-          <!-- Market header – green background -->
           <button
             on:click={() => toggleExpand(marketId)}
             class="w-full p-5 text-left flex justify-between items-center bg-green-600 hover:bg-green-700 transition text-white"
@@ -261,7 +256,6 @@
                   {#each vendors as vendor (getId(vendor))}
                     {@const products = vendor.products || []}
                     <div class="bg-white rounded-lg p-4 border border-gray-200">
-                      <!-- Vendor header -->
                       <div class="flex items-start space-x-4 mb-4">
                         {#if vendor.image}
                           <img src={getStrapiImageUrl(vendor.image)} alt={vendor.name} class="w-12 h-12 rounded-full object-cover" loading="lazy" />
@@ -296,7 +290,6 @@
                         </div>
                       </div>
 
-                      <!-- Products grid -->
                       {#if products.length}
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
                           {#each products as product (getId(product))}
@@ -342,29 +335,86 @@
     {/if}
   </section>
 
-  <!-- Advertising space -->
+  <!-- ── Slideshow / Advertising ── -->
   <div class="max-w-7xl mx-auto px-4 my-8">
     <Slideshow />
   </div>
-  
 
-  <!-- Footer -->
-  <footer class="bg-white border-t border-gray-200 py-6 text-center text-sm text-gray-500">
-    copyright: Mukatale-ug 2025. All rights reserved.
-    Site still under production! Designed and developed by andrewshevymwine-star
+  <!-- ── Footer ── -->
+  <footer class="bg-white border-t border-gray-200 py-8 text-center text-sm text-gray-500">
+    <p class="mb-2">copyright: Mukatale-ug 2025. All rights reserved.</p>
+    <p class="mb-5 text-xs text-gray-400">Site still in development! Designed and developed by andrew Mwine</p>
+
+    <div class="flex justify-center items-center gap-8">
+
+      <!-- WhatsApp -->
+      <a
+        href="https://wa.me/256754284932"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="footer-link footer-link--whatsapp"
+      >
+        <svg class="footer-icon" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"
+          />
+          <path
+            d="M12 0C5.373 0 0 5.373 0 12c0 2.124.558 4.118 1.533 5.845L.057 23.571a.5.5 0 0 0 .614.612l5.788-1.516A11.944 11.944 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.908a9.9 9.9 0 0 1-5.031-1.374l-.361-.214-3.735.979.997-3.648-.235-.374A9.862 9.862 0 0 1 2.092 12C2.092 6.534 6.534 2.092 12 2.092S21.908 6.534 21.908 12 17.466 21.908 12 21.908z"
+          />
+        </svg>
+        WhatsApp
+      </a>
+
+      <span class="text-gray-300 select-none">|</span>
+
+      <!-- LinkedIn -->
+      <a
+        href="https://www.linkedin.com/in/andrew-mwine-33709597"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="footer-link footer-link--linkedin"
+      >
+        <svg class="footer-icon" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+          />
+        </svg>
+        LinkedIn
+      </a>
+
+    </div>
   </footer>
+
 </div>
 
 <style>
   .title-font {
     font-family: 'Snell Roundhand', 'Bradley Hand', cursive;
-    font-size: 2.5rem; /* text-2xl */
-    font-weight: 700;   /* bold */
+    font-size: 2.5rem;
+    font-weight: 700;
   }
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  /* Footer links */
+  .footer-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+  .footer-link:hover { opacity: 0.75; }
+  .footer-link--whatsapp { color: #16a34a; }
+  .footer-link--linkedin { color: #2563eb; }
+  .footer-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
   }
 </style>
