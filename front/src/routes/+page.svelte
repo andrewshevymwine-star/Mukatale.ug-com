@@ -369,8 +369,8 @@
 
   <!-- ── Footer ── -->
   <footer class="site-footer">
-    <p class="footer-copy">© 2025 Mukatale.ug · All rights reserved.</p>
-    <p class="footer-dev">Designed & developed by Andrew Mwine — site still in development</p>
+    <p class="footer-copy">© 2026 Mukatale.ug · All rights reserved.</p>
+    <p class="footer-dev">Designed & developed by Andrew Mwine — Tukyakola</p>
     <div class="footer-links">
       <a href="https://wa.me/256754284932" target="_blank" rel="noopener noreferrer" class="footer-link footer-wa">
         <svg fill="currentColor" viewBox="0 0 24 24" width="18" height="18">
