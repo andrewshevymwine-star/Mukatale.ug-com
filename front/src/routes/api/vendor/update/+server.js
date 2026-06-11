@@ -29,7 +29,6 @@ export async function POST({ request, cookies }) {
     // ── Image upload ───────────────────────────────────────────────
     if (formData.imageFile && formData.imageFile.startsWith('data:image')) {
       try {
-        // Extract MIME type and base64 data
         const matches = formData.imageFile.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
         if (!matches || matches.length !== 3) {
           throw new Error('Invalid base64 image data');
@@ -65,7 +64,7 @@ export async function POST({ request, cookies }) {
         const uploaded = await uploadRes.json();
 
         if (uploaded?.length > 0) {
-          payload.image = uploaded[0].id; // ← use .id (not documentId)
+          payload.image = uploaded[0].id;
         }
       } catch (err) {
         console.error('Image upload error:', err);
@@ -73,9 +72,9 @@ export async function POST({ request, cookies }) {
       }
     }
 
-    // ── Step 1: Get documentId from numeric vendorId ───────────────
+    // ── Step 1: Get documentId and existing product IDs ───────────
     const fetchRes = await fetch(
-      `${STRAPI_URL}/api/vendors?filters[id][$eq]=${vendorId}&fields=documentId`,
+      `${STRAPI_URL}/api/vendors?filters[id][$eq]=${vendorId}&fields=documentId&populate[products][fields][0]=id`,
       {
         headers: { 'Authorization': `Bearer ${jwt}` }
       }
@@ -96,6 +95,10 @@ export async function POST({ request, cookies }) {
       throw new Error('Missing documentId');
     }
 
+    // ── Preserve existing product relations ───────────────────────
+    const existingProductIds = data[0].products?.map(p => p.id) ?? [];
+    payload.products = { connect: existingProductIds, disconnect: [] };
+
     // ── Step 2: Update vendor ──────────────────────────────────────
     const updateRes = await fetch(`${STRAPI_URL}/api/vendors/${documentId}`, {
       method: 'PUT',
@@ -103,7 +106,7 @@ export async function POST({ request, cookies }) {
         'Authorization': `Bearer ${jwt}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ data: payload })  // ← FIX: Strapi v5 content-type PUT requires { data: ... } wrapper
+      body: JSON.stringify({ data: payload })
     });
 
     if (!updateRes.ok) {
