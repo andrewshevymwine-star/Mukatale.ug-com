@@ -99,6 +99,9 @@ export async function POST({ request, cookies }) {
     const existingProductIds = data[0].products?.map(p => p.id) ?? [];
     payload.products = { connect: existingProductIds, disconnect: [] };
 
+    // ── Always publish on update ───────────────────────────────────
+    payload.status = 'published';
+
     // ── Step 2: Update vendor ──────────────────────────────────────
     const updateRes = await fetch(`${STRAPI_URL}/api/vendors/${documentId}`, {
       method: 'PUT',
