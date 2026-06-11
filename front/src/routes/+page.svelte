@@ -363,9 +363,9 @@
   </section>
 
   <!-- ── Slideshow / Advertising ── -->
-  <div class="slideshow-wrap">
+  <!-- <div class="slideshow-wrap">
     <Slideshow />
-  </div>
+  </div> -->
 
   <!-- ── Footer ── -->
   <footer class="site-footer">
