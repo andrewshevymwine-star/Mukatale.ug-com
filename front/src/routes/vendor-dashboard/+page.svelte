@@ -5,6 +5,7 @@
   import { auth } from '$lib/stores/auth';
   import { getStrapiImageUrl, formatPrice } from '$lib/strapi';
   import { PUBLIC_STRAPI_URL } from '$env/static/public';
+  import { goto, invalidateAll } from '$app/navigation';
 
   const STRAPI = PUBLIC_STRAPI_URL;
 
@@ -124,14 +125,16 @@
       }
 
       const result = await response.json();
-      if (result.vendor) {
-        auth.updateVendorProfile(result.vendor);
-        data.vendor = result.vendor;
-      }
 
-      saveMessage = 'Profile updated successfully!';
-      editMode    = false;
-      setTimeout(() => saveMessage = '', 3000);
+await invalidateAll(); // ← re-runs load(), refreshes all page data
+
+if (result.vendor) {
+  auth.updateVendorProfile(result.vendor);
+}
+
+saveMessage = 'Profile updated successfully!';
+editMode    = false;
+setTimeout(() => saveMessage = '', 3000);
     } catch (err) {
       saveError = err.message;
     } finally {
