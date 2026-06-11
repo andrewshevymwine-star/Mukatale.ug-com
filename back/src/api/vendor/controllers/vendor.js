@@ -23,11 +23,16 @@ module.exports = createCoreController('api::vendor.vendor', ({ strapi }) => ({
       { ...data, products: productsPayload }, ctx
     );
 
+    // Update and publish in one step using system privileges
     const result = await strapi.documents('api::vendor.vendor').update({
       documentId: id,
       data: sanitized,
       populate: ['products']
-      status: 'published' 
+    });
+
+    // Explicitly publish after update
+    await strapi.documents('api::vendor.vendor').publish({
+      documentId: id
     });
 
     return this.sanitizeOutput(result, ctx);
