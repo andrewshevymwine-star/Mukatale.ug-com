@@ -27,6 +27,7 @@ module.exports = createCoreController('api::vendor.vendor', ({ strapi }) => ({
       documentId: id,
       data: sanitized,
       populate: ['products']
+      status: 'published' 
     });
 
     return this.sanitizeOutput(result, ctx);
