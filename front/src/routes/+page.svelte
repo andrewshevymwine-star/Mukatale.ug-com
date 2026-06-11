@@ -5,7 +5,7 @@
   import { browser } from '$app/environment';
   import { invalidateAll } from '$app/navigation';
   import { onMount } from 'svelte';
-  import Slideshow from '$lib/components/Slideshow.svelte';
+  
 
   export let data;
 
@@ -362,10 +362,7 @@
     </div>
   </section>
 
-  <!-- ── Slideshow / Advertising ── -->
-  <!-- <div class="slideshow-wrap">
-    <Slideshow />
-  </div> -->
+
 
   <!-- ── Footer ── -->
   <footer class="site-footer">
