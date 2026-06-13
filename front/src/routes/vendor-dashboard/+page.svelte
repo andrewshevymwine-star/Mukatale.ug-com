@@ -1,7 +1,6 @@
 <!-- src/routes/vendor-dashboard/+page.svelte -->
 <script>
   import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
   import { auth } from '$lib/stores/auth';
   import { getStrapiImageUrl, formatPrice } from '$lib/strapi';
   import { PUBLIC_STRAPI_URL } from '$env/static/public';
