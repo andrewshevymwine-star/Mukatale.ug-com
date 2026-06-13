@@ -1,11 +1,9 @@
 <script>
   import { getStrapiImageUrl, formatPrice } from '$lib/strapi.js';
   import { auth } from '$lib/stores/auth';
-  import { goto } from '$app/navigation';
+  import { goto, invalidateAll } from '$app/navigation';
   import { browser } from '$app/environment';
-  import { invalidateAll } from '$app/navigation';
   import { onMount } from 'svelte';
-  
 
   export let data;
 
@@ -96,10 +94,6 @@
     revealedContacts = newRevealed;
   }
 
-  function navigateToLogin() { goto('/vendor-login'); }
-  function navigateToRegistration() { goto('/vendor-registration'); }
-  function navigateToDashboard() { goto('/vendor-dashboard'); }
-
   async function logout() {
     if (!browser) return;
     try {
@@ -144,11 +138,11 @@
       </div>
       <nav class="header-nav">
         {#if $auth?.jwt}
-          <button on:click={navigateToDashboard} class="btn btn-primary">Dashboard</button>
+          <a href="/vendor-dashboard" class="btn btn-primary">Dashboard</a>
           <button on:click={logout} class="btn btn-ghost-danger">Logout</button>
         {:else}
-          <button on:click={navigateToLogin} class="btn btn-outline">Login</button>
-          <button on:click={navigateToRegistration} class="btn btn-primary">Signup</button>
+          <a href="/vendor-login" class="btn btn-outline">Login</a>
+          <a href="/vendor-registration" class="btn btn-primary">Signup</a>
         {/if}
       </nav>
     </div>
@@ -294,7 +288,7 @@
                           <span class="product-count-badge">{products.length} item{products.length !== 1 ? 's' : ''}</span>
                         </div>
 
-                        <!-- Products grid — PRODUCT FIRST -->
+                        <!-- Products grid -->
                         {#if products.length}
                           <div class="products-grid">
                             {#each products as product (getId(product))}
@@ -350,7 +344,7 @@
                 {:else}
                   <div class="no-vendors">
                     <p>No vendors in this market yet.</p>
-                    <button on:click={navigateToRegistration} class="btn btn-primary">Become a Vendor</button>
+                    <a href="/vendor-registration" class="btn btn-primary">Become a Vendor</a>
                   </div>
                 {/if}
               </div>
@@ -361,8 +355,6 @@
 
     </div>
   </section>
-
-
 
   <!-- ── Footer ── -->
   <footer class="site-footer">
@@ -475,6 +467,7 @@
     cursor: pointer; border: 2px solid transparent;
     transition: all .18s ease;
     white-space: nowrap;
+    text-decoration: none;
   }
   .btn-primary   { background: var(--green-main); color: var(--white); }
   .btn-primary:hover { background: #15803d; }
@@ -777,9 +770,6 @@
     display: flex; flex-direction: column; align-items: center; gap: .85rem;
     color: var(--gray-500); font-size: .9rem;
   }
-
-  /* ── Slideshow ── */
-  .slideshow-wrap { max-width: 1200px; margin: 0 auto; padding: 0 1.25rem 2.5rem; }
 
   /* ── Footer ── */
   .site-footer {
